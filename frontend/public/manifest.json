@@ -1,0 +1,10 @@
+{
+  "name": "Zambian AI Tutor",
+  "short_name": "ZA Tutor",
+  "description": "Your AI-powered Zambian examination tutor.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf5",
+  "theme_color": "#24785a",
+  "icons": []
+}
