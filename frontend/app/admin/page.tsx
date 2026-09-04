@@ -3,6 +3,7 @@
 import { Database, FileStack, Users } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { PageShell } from "../../components/PageShell";
+import { ProtectedPage } from "../../components/ProtectedPage";
 import { apiRequest, authHeaders, Grade, Subject, Subtopic, Topic } from "../../lib/api";
 import { getToken } from "../../lib/auth";
 
@@ -13,6 +14,16 @@ const areas = [
 ];
 
 export default function AdminPage() {
+  return (
+    <PageShell>
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        <ProtectedPage adminOnly>{() => <AdminContent />}</ProtectedPage>
+      </section>
+    </PageShell>
+  );
+}
+
+function AdminContent() {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -125,8 +136,7 @@ export default function AdminPage() {
   }
 
   return (
-    <PageShell>
-      <section className="mx-auto max-w-6xl px-4 py-10">
+    <>
         <p className="text-sm font-semibold uppercase text-copper">Admin</p>
         <h1 className="mt-2 text-3xl font-bold">Platform management</h1>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
@@ -257,7 +267,6 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
-      </section>
-    </PageShell>
+    </>
   );
 }

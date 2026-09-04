@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BookOpen, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { BookOpen, GraduationCap, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/subjects", label: "Subjects", icon: GraduationCap },
   { href: "/admin", label: "Admin", icon: ShieldCheck }
 ];
 

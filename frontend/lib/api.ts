@@ -14,6 +14,7 @@ export type Subject = {
   id: number;
   grade_id: number;
   name: string;
+  grade?: Grade;
 };
 
 export type Topic = {

@@ -1,10 +1,12 @@
 "use client";
 
 import { BookOpenCheck, CalendarDays, LineChart, Target } from "lucide-react";
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { PageShell } from "../../components/PageShell";
+import { ProtectedPage } from "../../components/ProtectedPage";
 import { apiRequest, authHeaders, Grade, StudentProfile, Subject } from "../../lib/api";
-import { getStoredUser, getToken } from "../../lib/auth";
+import { getToken } from "../../lib/auth";
 
 const metrics = [
   { label: "Readiness", value: "Not assessed", icon: Target },
@@ -14,13 +16,21 @@ const metrics = [
 ];
 
 export default function DashboardPage() {
+  return (
+    <PageShell>
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        <ProtectedPage>{(user) => <DashboardContent userName={user.full_name} />}</ProtectedPage>
+      </section>
+    </PageShell>
+  );
+}
+
+function DashboardContent({ userName }: { userName: string }) {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [message, setMessage] = useState("");
   const [gradeId, setGradeId] = useState("");
-  const user = typeof window !== "undefined" ? getStoredUser() : null;
-
   useEffect(() => {
     async function load() {
       const token = getToken();
@@ -72,12 +82,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <PageShell>
-      <section className="mx-auto max-w-6xl px-4 py-10">
+    <>
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase text-leaf">Student dashboard</p>
           <h1 className="mt-2 text-3xl font-bold">Preparation overview</h1>
-          <p className="mt-2 text-ink/65">{user ? `Signed in as ${user.full_name}` : "Sign in to save your setup."}</p>
+          <p className="mt-2 text-ink/65">Signed in as {userName}</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {metrics.map((metric) => {
@@ -90,6 +99,17 @@ export default function DashboardPage() {
               </article>
             );
           })}
+        </div>
+        <div className="mt-8 rounded bg-white p-6 shadow-soft">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold">Learning area</h2>
+              <p className="mt-2 text-ink/65">Open your selected subjects and continue into topics and lessons.</p>
+            </div>
+            <Link className="rounded bg-ink px-4 py-3 text-center font-semibold text-white" href="/subjects">
+              View subjects
+            </Link>
+          </div>
         </div>
         <div className="mt-8 rounded bg-white p-6 shadow-soft">
           <h2 className="text-xl font-bold">Student profile</h2>
@@ -134,7 +154,6 @@ export default function DashboardPage() {
             </button>
           </form>
         </div>
-      </section>
-    </PageShell>
+    </>
   );
 }
