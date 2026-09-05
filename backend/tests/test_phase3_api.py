@@ -1,16 +1,31 @@
 from app.db.session import SessionLocal
-from app.models import Grade, UserRole
+from app.models import Grade, User, UserRole
+from app.security import create_access_token, hash_password
 
 
 def register_user(client, email="learner@example.com", role=UserRole.student):
+    if role == UserRole.admin:
+        with SessionLocal() as db:
+            user = User(
+                email=email,
+                full_name="Admin User",
+                hashed_password=hash_password("strongpass123"),
+                role=UserRole.admin,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return create_access_token(str(user.id))
+
+    payload = {
+        "email": email,
+        "full_name": "Learner One",
+        "password": "strongpass123",
+    }
+
     response = client.post(
         "/api/auth/register",
-        json={
-            "email": email,
-            "full_name": "Learner One",
-            "password": "strongpass123",
-            "role": role.value,
-        },
+        json=payload,
     )
     assert response.status_code == 201
     return response.json()["access_token"]
@@ -88,6 +103,20 @@ def test_admin_topic_and_subtopic_create(client):
     )
     assert subtopic.status_code == 201
     assert subtopic.json()["name"] == "Balanced forces"
+
+
+def test_admin_material_upload_accepts_text_file(client):
+    admin_token = register_user(client, email="admin@example.com", role=UserRole.admin)
+
+    response = client.post(
+        "/api/admin/materials/upload",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        files={"file": ("sample.txt", b"authorised material", "text/plain")},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["filename"] == "sample.txt"
+    assert response.json()["status"] == "received_pending_processing"
 
 
 def test_student_profile_upsert(client):

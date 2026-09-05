@@ -22,3 +22,18 @@ def test_register_and_login(client):
 
     assert login_response.status_code == 200
     assert login_response.json()["access_token"]
+
+
+def test_public_register_cannot_create_admin(client):
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "not-admin@example.com",
+            "full_name": "Not Admin",
+            "password": "strongpass123",
+            "role": "admin",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["user"]["role"] == "student"

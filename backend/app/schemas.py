@@ -12,7 +12,6 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     full_name: str = Field(min_length=2, max_length=255)
     password: str = Field(min_length=8, max_length=128)
-    role: UserRole = UserRole.student
 
 
 class LoginRequest(BaseModel):
@@ -93,3 +92,10 @@ class StudentProfileResponse(BaseModel):
     selected_subjects: list[SubjectResponse]
 
     model_config = {"from_attributes": True}
+
+
+class MaterialUploadResponse(BaseModel):
+    filename: str
+    content_type: str | None
+    size_bytes: int
+    status: str

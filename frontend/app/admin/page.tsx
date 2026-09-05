@@ -4,7 +4,7 @@ import { Database, FileStack, Users } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { PageShell } from "../../components/PageShell";
 import { ProtectedPage } from "../../components/ProtectedPage";
-import { apiRequest, authHeaders, Grade, Subject, Subtopic, Topic } from "../../lib/api";
+import { API_BASE_URL, apiRequest, authHeaders, Grade, Subject, Subtopic, Topic } from "../../lib/api";
 import { getToken } from "../../lib/auth";
 
 const areas = [
@@ -32,6 +32,8 @@ function AdminContent() {
   const [subjectId, setSubjectId] = useState("");
   const [topicId, setTopicId] = useState("");
   const [message, setMessage] = useState("");
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     apiRequest<Grade[]>("/api/grades")
@@ -133,6 +135,43 @@ function AdminContent() {
     setSubtopics((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
     setMessage("Subtopic added.");
     event.currentTarget.reset();
+  }
+
+  async function uploadMaterial(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const token = getToken();
+    if (!token) {
+      setUploadMessage("Log in as an admin before uploading materials.");
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const file = form.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      setUploadMessage("Choose a PDF, DOCX, or TXT file before uploading.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadMessage("Uploading material...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/materials/upload`, {
+        method: "POST",
+        headers: authHeaders(token),
+        body: form
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setUploadMessage(data?.detail ?? "Material upload failed.");
+        return;
+      }
+      setUploadMessage(`Material received: ${data.filename}`);
+      event.currentTarget.reset();
+    } catch {
+      setUploadMessage("Could not reach the backend upload service.");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   return (
@@ -266,6 +305,28 @@ function AdminContent() {
               ))}
             </div>
           </div>
+        </div>
+        <div className="mt-8 rounded bg-white p-6 shadow-soft">
+          <h2 className="text-xl font-bold">Materials upload</h2>
+          <p className="mt-2 text-ink/65">
+            Upload authorised PDF, DOCX, or TXT learning materials for later processing.
+          </p>
+          <form className="mt-5 grid gap-4 md:grid-cols-[1fr_auto]" onSubmit={uploadMaterial}>
+            <label className="block text-sm font-medium text-ink/80">
+              Material file
+              <input
+                className="mt-2 w-full rounded border border-ink/15 px-3 py-3 outline-leaf"
+                name="file"
+                type="file"
+                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                required
+              />
+            </label>
+            <button className="self-end rounded bg-leaf px-4 py-3 font-semibold text-white disabled:opacity-65" type="submit" disabled={isUploading}>
+              {isUploading ? "Uploading..." : "Upload material"}
+            </button>
+          </form>
+          {uploadMessage ? <p className="mt-4 text-sm font-medium text-leaf">{uploadMessage}</p> : null}
         </div>
     </>
   );
