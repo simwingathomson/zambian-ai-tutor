@@ -4,7 +4,7 @@ import { Database, FileStack, Users } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { PageShell } from "../../components/PageShell";
 import { ProtectedPage } from "../../components/ProtectedPage";
-import { API_BASE_URL, apiRequest, authHeaders, Grade, Subject, Subtopic, Topic } from "../../lib/api";
+import { apiRequest, apiUrl, authHeaders, Grade, Subject, Subtopic, Topic } from "../../lib/api";
 import { getToken } from "../../lib/auth";
 
 const areas = [
@@ -155,7 +155,7 @@ function AdminContent() {
     setIsUploading(true);
     setUploadMessage("Uploading material...");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/materials/upload`, {
+      const response = await fetch(apiUrl("/api/admin/materials/upload"), {
         method: "POST",
         headers: authHeaders(token),
         body: form
@@ -167,8 +167,12 @@ function AdminContent() {
       }
       setUploadMessage(`Material received: ${data.filename}`);
       event.currentTarget.reset();
-    } catch {
-      setUploadMessage("Could not reach the backend upload service.");
+    } catch (error) {
+      setUploadMessage(
+        error instanceof TypeError
+          ? "Could not reach the backend upload service. Check the backend URL and allowed Vercel origin."
+          : "Could not upload the material."
+      );
     } finally {
       setIsUploading(false);
     }
