@@ -120,32 +120,38 @@ function AdminContent() {
 
   async function createSubtopic(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     const token = getToken();
     if (!token || !topicId) {
       setMessage("Choose a topic and log in as an admin before adding subtopics.");
       return;
     }
 
-    const form = new FormData(event.currentTarget);
-    const created = await apiRequest<Subtopic>("/api/admin/subtopics", {
-      method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify({ topic_id: Number(topicId), name: String(form.get("name")) })
-    });
-    setSubtopics((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
-    setMessage("Subtopic added.");
-    event.currentTarget.reset();
+    const form = new FormData(formElement);
+    try {
+      const created = await apiRequest<Subtopic>("/api/admin/subtopics", {
+        method: "POST",
+        headers: authHeaders(token),
+        body: JSON.stringify({ topic_id: Number(topicId), name: String(form.get("name")) })
+      });
+      setSubtopics((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setMessage("Subtopic added.");
+      formElement.reset();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not add subtopic.");
+    }
   }
 
   async function uploadMaterial(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     const token = getToken();
     if (!token) {
       setUploadMessage("Log in as an admin before uploading materials.");
       return;
     }
 
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const file = form.get("file");
     if (!(file instanceof File) || file.size === 0) {
       setUploadMessage("Choose a PDF, DOCX, or TXT file before uploading.");
@@ -166,7 +172,7 @@ function AdminContent() {
         return;
       }
       setUploadMessage(`Material received: ${data.filename}`);
-      event.currentTarget.reset();
+      formElement.reset();
     } catch {
       setUploadMessage("Could not reach the backend upload service.");
     } finally {
